@@ -1,24 +1,49 @@
 'use server';
 
-import { calculateTax } from '@/lib/tax-calculation';
+import { calculateTax, type TaxResult } from '@/lib/tax-calculation';
 import { findTax, type TaxInput } from '@/services/tax-service';
 
-export async function calculateTaxAction(formData: TaxInput) {
-  const rule = findTax(formData);
+export type ActionResponse =
+  | { success: true; data: TaxResult & { state: string; year: number } }
+  | { success: false; error: string };
 
-  // TODO: should we throw an error if no rule found? In addition, specify which props from input wasn't found if possible?
-  const rate = rule ? rule.rate : 0;
+export const calculateTaxAction = async (
+  _prevState: ActionResponse | null,
+  formData: FormData,
+): Promise<ActionResponse> => {
+  try {
+    const amountStr = formData.get('amount') as string;
+    const state = formData.get('state') as string;
+    const yearStr = formData.get('year') as string;
+    const productCategory = formData.get('productCategory') as string;
 
-  const result = calculateTax({
-    amount: formData.amount,
-    rate: rate,
-  });
+    const amount = Number.parseFloat(amountStr);
+    const year = Number.parseInt(yearStr, 10);
 
-  return {
-    ...result,
-    state: formData.state,
-    year: formData.year,
-    category: formData.productCategory,
-    ruleFound: !!rule,
-  };
-}
+    if (Number.isNaN(amount) || amount <= 0) {
+      return { success: false, error: 'Invalid amount provided.' };
+    }
+
+    const input: TaxInput = { amount, state, year, productCategory };
+    const rule = findTax(input);
+
+    // TODO: should we throw an error if no rule found? In addition, specify which props from input wasn't found if possible?
+    const rate = rule ? rule.rate : 0;
+
+    const result = calculateTax({ amount, rate });
+
+    return {
+      success: true,
+      data: {
+        ...result,
+        state,
+        year,
+      },
+    };
+  } catch (e) {
+    const errorMessage =
+      e instanceof Error ? e.message : 'An unexpected error occurred';
+
+    return { success: false, error: errorMessage };
+  }
+};
