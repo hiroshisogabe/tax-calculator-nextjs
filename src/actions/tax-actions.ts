@@ -1,31 +1,44 @@
 'use server';
 
+import z from 'zod';
 import { calculateTax, type TaxResult } from '@/lib/tax-calculation';
-import { findTax, type TaxInput } from '@/services/tax-service';
+import { flattenZodErrors } from '@/lib/tax-formatting-error-validation';
+import { findTax } from '@/services/tax-service';
+
+const TaxSchema = z.object({
+  amount: z.coerce.number().positive('Amount must be greater than zero'),
+  state: z.string().min(2, 'State code is required (e.g., NY)'),
+  year: z.coerce
+    .number()
+    .int()
+    .min(1000, 'Must be a 4-digit year')
+    .max(9999, 'Must be a 4-digit year'),
+  productCategory: z.string().min(1, 'Category is required'),
+});
 
 export type ActionResponse =
   | { success: true; data: TaxResult & { state: string; year: number } }
-  | { success: false; error: string };
+  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
 export const calculateTaxAction = async (
   _prevState: ActionResponse | null,
   formData: FormData,
 ): Promise<ActionResponse> => {
+  const rawData = Object.fromEntries(formData.entries());
+  const validated = TaxSchema.safeParse(rawData);
+
+  if (!validated.success) {
+    return {
+      success: false,
+      error: 'Invalid form data. Please check the fields.',
+      fieldErrors: flattenZodErrors(validated.error),
+    };
+  }
+
   try {
-    const amountStr = formData.get('amount') as string;
-    const state = formData.get('state') as string;
-    const yearStr = formData.get('year') as string;
-    const productCategory = formData.get('productCategory') as string;
+    const { amount, state, year, productCategory } = validated.data;
 
-    const amount = Number.parseFloat(amountStr);
-    const year = Number.parseInt(yearStr, 10);
-
-    if (Number.isNaN(amount) || amount <= 0) {
-      return { success: false, error: 'Invalid amount provided.' };
-    }
-
-    const input: TaxInput = { amount, state, year, productCategory };
-    const rule = findTax(input);
+    const rule = findTax({ amount, state, year, productCategory });
 
     // TODO: should we throw an error if no rule found? In addition, specify which props from input wasn't found if possible?
     const rate = rule ? rule.rate : 0;
