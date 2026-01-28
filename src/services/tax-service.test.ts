@@ -1,8 +1,21 @@
-import { findTax } from './tax-service';
+import { findTax, getSupportedRates } from './tax-service';
+
+jest.mock('./tax-service', () => ({
+  ...jest.requireActual('./tax-service'),
+  getSupportedRates: jest.fn(),
+}));
 
 describe('tax-service', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('findTax', () => {
     it('returns the matching tax rule', () => {
+      (getSupportedRates as jest.Mock).mockReturnValue([
+        { state: 'CA', year: 2024, category: 'General', rate: 0.1 },
+      ]);
+
       const result = findTax({
         amount: 100,
         state: 'CA',
@@ -15,6 +28,10 @@ describe('tax-service', () => {
     });
 
     it('returns null when no matching rule is found', () => {
+      (getSupportedRates as jest.Mock).mockReturnValue([
+        { state: 'CA', year: 2024, category: 'General', rate: 0.1 },
+      ]);
+
       const result = findTax({
         amount: 100,
         state: 'Mars',

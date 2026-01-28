@@ -21,9 +21,13 @@ const TAX_RULES = [
   { state: 'NY', year: 2025, category: 'Food', rate: 0.0 },
 ];
 
+export const getSupportedRates = () => TAX_RULES;
+
 export const findTax: FindTaxType = (input) => {
+  const rules = getSupportedRates();
+
   return (
-    TAX_RULES.find(
+    rules.find(
       (r) =>
         r.state === input.state &&
         r.year === input.year &&
