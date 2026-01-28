@@ -16,9 +16,20 @@ const TaxSchema = z.object({
   productCategory: z.string({ message: 'Category is required' }),
 });
 
+export type TaxFormInputs = Partial<Record<keyof TaxInput, string>>;
+
 export type ActionResponse =
-  | { success: true; data: TaxResult & { state: string; year: number } }
-  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
+  | {
+      success: true;
+      data: TaxResult & { state: string; year: number };
+      inputs: TaxFormInputs;
+    }
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+      inputs?: TaxFormInputs;
+    };
 
 export const calculateTaxAction = async (
   _prevState: ActionResponse | null,
@@ -32,6 +43,7 @@ export const calculateTaxAction = async (
       success: false,
       error: 'Invalid form data. Please check the fields.',
       fieldErrors: flattenZodErrors(validated.error),
+      inputs: rawData,
     };
   }
 
@@ -52,6 +64,7 @@ export const calculateTaxAction = async (
         state,
         year,
       },
+      inputs: rawData,
     };
   } catch (e) {
     const errorMessage =

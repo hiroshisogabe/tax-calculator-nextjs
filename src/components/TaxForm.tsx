@@ -1,16 +1,21 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef } from 'react';
 import { calculateTaxAction } from '@/actions/tax-actions';
 
 // TODO: the product categories should be fetched from the server and validate the formData on server side as well
 export const PRODUCT_CATEGORIES = ['General', 'Food'];
 
 export default function TaxForm() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(
     calculateTaxAction,
     null,
   );
+
+  const handleReset = () => {
+    formRef.current?.reset();
+  };
 
   // TODO: split into smaller components, e.g. InputField, ErrorMessage, SuccessView, etc.
   return (
@@ -19,7 +24,7 @@ export default function TaxForm() {
         Tax Calculator
       </h2>
 
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="space-y-5" ref={formRef}>
         {state?.success === false && state.error && (
           <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
             {state.error}
@@ -39,6 +44,7 @@ export default function TaxForm() {
             id="amount"
             step="0.01"
             placeholder="0.00"
+            defaultValue={state?.inputs?.amount || ''}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           />
           {state?.success === false && state.fieldErrors?.amount && (
@@ -60,6 +66,7 @@ export default function TaxForm() {
               name="state"
               id="state"
               placeholder="e.g. CA"
+              defaultValue={state?.inputs?.state || ''}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 uppercase outline-none"
             />
             {state?.success === false && state.fieldErrors?.state && (
@@ -81,6 +88,7 @@ export default function TaxForm() {
               name="year"
               id="year"
               placeholder="2024"
+              defaultValue={state?.inputs?.year || ''}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
             {state?.success === false && state.fieldErrors?.year && (
@@ -99,8 +107,10 @@ export default function TaxForm() {
             Product Category
           </label>
           <select
+            key={state?.inputs?.productCategory}
             name="productCategory"
             id="productCategory"
+            defaultValue={state?.inputs?.productCategory || ''}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
           >
             <option value="" disabled>
@@ -123,13 +133,22 @@ export default function TaxForm() {
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
-        >
-          {isPending ? 'Calculating...' : 'Calculate Tax'}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
+          >
+            {isPending ? 'Calculating...' : 'Calculate Tax'}
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg transition-all active:scale-[0.98] border border-gray-200 dark:border-gray-700"
+          >
+            Reset
+          </button>
+        </div>
       </form>
 
       {state?.success && state.data && (
