@@ -3,22 +3,36 @@
 import z from 'zod';
 import { calculateTax, type TaxResult } from '@/lib/tax-calculation';
 import { flattenZodErrors } from '@/lib/tax-formatting-error-validation';
-import { findTax } from '@/services/tax-service';
+import { findTax, type TaxInput } from '@/services/tax-service';
 
 const TaxSchema = z.object({
   amount: z.coerce.number().positive('Amount must be greater than zero'),
-  state: z.string().min(2, 'State code is required (e.g., NY)'),
+  state: z
+    .string()
+    .min(2, 'State code is required (e.g., NY)')
+    .transform((val) => val.trim().toUpperCase()),
   year: z.coerce
     .number()
     .int()
     .min(1000, 'Must be a 4-digit year')
     .max(9999, 'Must be a 4-digit year'),
-  productCategory: z.string().min(1, 'Category is required'),
+  productCategory: z.string({ message: 'Category is required' }),
 });
 
+export type TaxFormInputs = Partial<Record<keyof TaxInput, string>>;
+
 export type ActionResponse =
-  | { success: true; data: TaxResult & { state: string; year: number } }
-  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
+  | {
+      success: true;
+      data: TaxResult & { state: string; year: number };
+      inputs: TaxFormInputs;
+    }
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+      inputs?: TaxFormInputs;
+    };
 
 export const calculateTaxAction = async (
   _prevState: ActionResponse | null,
@@ -32,6 +46,7 @@ export const calculateTaxAction = async (
       success: false,
       error: 'Invalid form data. Please check the fields.',
       fieldErrors: flattenZodErrors(validated.error),
+      inputs: rawData,
     };
   }
 
@@ -40,8 +55,15 @@ export const calculateTaxAction = async (
 
     const rule = findTax({ amount, state, year, productCategory });
 
-    // TODO: should we throw an error if no rule found? In addition, specify which props from input wasn't found if possible?
     const rate = rule ? rule.rate : 0;
+
+    if (!rule) {
+      return {
+        success: false,
+        error: `Tax rules for ${state} in ${year} are not available for the ${productCategory} category.`,
+        inputs: rawData,
+      };
+    }
 
     const result = calculateTax({ amount, rate });
 
@@ -52,6 +74,7 @@ export const calculateTaxAction = async (
         state,
         year,
       },
+      inputs: rawData,
     };
   } catch (e) {
     const errorMessage =
