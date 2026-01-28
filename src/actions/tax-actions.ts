@@ -55,8 +55,15 @@ export const calculateTaxAction = async (
 
     const rule = findTax({ amount, state, year, productCategory });
 
-    // TODO: should we throw an error if no rule found? In addition, specify which props from input wasn't found if possible?
     const rate = rule ? rule.rate : 0;
+
+    if (!rule) {
+      return {
+        success: false,
+        error: `Tax rules for ${state} in ${year} are not available for the ${productCategory} category.`,
+        inputs: rawData,
+      };
+    }
 
     const result = calculateTax({ amount, rate });
 
