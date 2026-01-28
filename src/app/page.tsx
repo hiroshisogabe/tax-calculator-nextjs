@@ -1,3 +1,6 @@
+import { Suspense } from 'react';
+import SupportSummary from '@/components/SupportSummary';
+import SupportSummarySkeleton from '@/components/SupportSummarySkeleton';
 import TaxForm from '@/components/TaxForm';
 
 export default function Home() {
@@ -12,7 +15,16 @@ export default function Home() {
         </p>
       </div>
 
-      <TaxForm />
+      <div className="flex flex-col lg:grid lg:grid-cols-10 gap-8">
+        <div className="lg:col-span-6 w-full">
+          <TaxForm />
+        </div>
+        <div className="lg:col-span-4 w-full">
+          <Suspense fallback={<SupportSummarySkeleton />}>
+            <SupportSummary />
+          </Suspense>
+        </div>
+      </div>
     </main>
   );
 }
