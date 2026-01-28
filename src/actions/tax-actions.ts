@@ -3,11 +3,14 @@
 import z from 'zod';
 import { calculateTax, type TaxResult } from '@/lib/tax-calculation';
 import { flattenZodErrors } from '@/lib/tax-formatting-error-validation';
-import { findTax } from '@/services/tax-service';
+import { findTax, type TaxInput } from '@/services/tax-service';
 
 const TaxSchema = z.object({
   amount: z.coerce.number().positive('Amount must be greater than zero'),
-  state: z.string().min(2, 'State code is required (e.g., NY)'),
+  state: z
+    .string()
+    .min(2, 'State code is required (e.g., NY)')
+    .transform((val) => val.trim().toUpperCase()),
   year: z.coerce
     .number()
     .int()
