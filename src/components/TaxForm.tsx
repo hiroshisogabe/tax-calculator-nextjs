@@ -116,6 +116,11 @@ export default function TaxForm() {
               </option>
             ))}
           </select>
+          {state?.success === false && state.fieldErrors?.productCategory && (
+            <p className="text-red-500 text-xs mt-1 italic">
+              {state.fieldErrors.productCategory[0]}
+            </p>
+          )}
         </div>
 
         <button

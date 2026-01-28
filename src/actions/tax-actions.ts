@@ -13,7 +13,7 @@ const TaxSchema = z.object({
     .int()
     .min(1000, 'Must be a 4-digit year')
     .max(9999, 'Must be a 4-digit year'),
-  productCategory: z.string().min(1, 'Category is required'),
+  productCategory: z.string({ message: 'Category is required' }),
 });
 
 export type ActionResponse =
