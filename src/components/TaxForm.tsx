@@ -19,7 +19,7 @@ export default function TaxForm() {
 
   // TODO: split into smaller components, e.g. InputField, ErrorMessage, SuccessView, etc.
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800">
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800">
       <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
         Tax Calculator
       </h2>
