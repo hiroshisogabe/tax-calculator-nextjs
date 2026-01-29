@@ -53,7 +53,7 @@ export const calculateTaxAction = async (
   try {
     const { amount, state, year, productCategory } = validated.data;
 
-    const rule = findTax({ amount, state, year, productCategory });
+    const rule = await findTax({ amount, state, year, productCategory });
 
     const rate = rule ? rule.rate : 0;
 

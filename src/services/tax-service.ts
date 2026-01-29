@@ -12,7 +12,7 @@ export type TaxResult = {
   rate: number;
 };
 
-export type FindTaxType = (input: TaxInput) => TaxResult | null;
+export type FindTaxType = (input: TaxInput) => Promise<TaxResult | null>;
 
 // TODO: retrieve TAX_RULES from a database or external service
 const TAX_RULES = [
@@ -21,10 +21,14 @@ const TAX_RULES = [
   { state: 'NY', year: 2025, category: 'Food', rate: 0.0 },
 ];
 
-export const getSupportedRates = () => TAX_RULES;
+export const getSupportedRates = async () => {
+  // Artificial delay for 2 seconds to see the skeleton
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return TAX_RULES;
+};
 
-export const findTax: FindTaxType = (input) => {
-  const rules = getSupportedRates();
+export const findTax: FindTaxType = async (input) => {
+  const rules = await getSupportedRates();
 
   return (
     rules.find(

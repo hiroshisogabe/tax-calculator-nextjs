@@ -1,7 +1,7 @@
 import { getSupportedRates } from '@/services/tax-service';
 
 export default async function SupportSummary() {
-  const rates = getSupportedRates();
+  const rates = await getSupportedRates();
 
   return (
     <section className="mx-auto p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
