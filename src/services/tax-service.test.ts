@@ -11,12 +11,12 @@ describe('tax-service', () => {
   });
 
   describe('findTax', () => {
-    it('returns the matching tax rule', async () => {
+    it('returns the matching tax rule', () => {
       (getSupportedRates as jest.Mock).mockReturnValue([
         { state: 'CA', year: 2024, category: 'General', rate: 0.1 },
       ]);
 
-      const result = await findTax({
+      const result = findTax({
         amount: 100,
         state: 'CA',
         year: 2024,
@@ -27,12 +27,12 @@ describe('tax-service', () => {
       expect(result?.rate).toBe(0.1);
     });
 
-    it('returns null when no matching rule is found', async () => {
+    it('returns null when no matching rule is found', () => {
       (getSupportedRates as jest.Mock).mockReturnValue([
         { state: 'CA', year: 2024, category: 'General', rate: 0.1 },
       ]);
 
-      const result = await findTax({
+      const result = findTax({
         amount: 100,
         state: 'Mars',
         year: 3000,
